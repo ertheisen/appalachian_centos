@@ -145,7 +145,7 @@ Singularity container containing following apps for ChIP-seq and CUT&RUN process
 	R --slave -e 'install.packages("caTools", repos="http://cran.us.r-project.org")'
 	R --slave -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Rsamtools", suppressUpdates=TRUE)'
 	R --slave -e 'install.packages("BH", repos="http://cran.us.r-project.org")'
-	R --slave -e 'install.packages("spp", dependencies = TRUE)'
+	R --slave -e 'install.packages("spp", repos="http://cran.us.r-project.org", dependencies = TRUE)'
 
 	cd /opt
 	git clone https://github.com/kundajelab/phantompeakqualtools
