@@ -30,8 +30,10 @@ if bam_files == 0:
 	if bam_files == 0:
 		print 'No bam files detected. Exiting...'
 		sys.exit()
-	else work_dir = 2
-else work_dir = 1
+	else:
+		work_dir = 2
+else:
+	work_dir = 1
 
 bai_files = sorted(glob.glob('*bai'))
 if bai_files == 0:
@@ -84,8 +86,9 @@ print '\n'
 
 #generate bed file names
 bed_names = [f.replace('bam', 'bed') for f in datafiles]
-size_selected_120 = [f.replace('bam', '20_120.bed') for f in datafiles]
-size_selected_150 = [f.replace('bam', '150_800.bed') for f in datafiles]
+size_selected_small = [f.replace('bam', 'small.bed') for f in datafiles]
+size_selected_med = [f.replace('bam', 'med.bed') for f in datafiles]
+size_selected_big = [f.replace('bam', 'big.bed') for f in datafiles]
 
 #generate file names for length analysis
 lengths_names = [f.replace('bam', 'lengths') for f in datafiles]
@@ -109,20 +112,26 @@ for i in range(len(datafiles)):
 	temp_lengths.to_csv(lengths_names[i], sep="\t", header = [bed_names[i]], index = True, index_label='length')
 
 	#generate size-selected whole insert beds
-	subset_120 = temp_bed_stripped[(temp_bed_stripped.iloc[:,3]>=20) & (temp_bed_stripped.iloc[:,3]<=120)]
-	subset_120.to_csv(size_selected_120[i], sep="\t", header = False, index = False)
+	subset_small = temp_bed_stripped[(temp_bed_stripped.iloc[:,3]>=20) & (temp_bed_stripped.iloc[:,3]<=140)]
+	subset_small.to_csv(size_selected_small[i], sep="\t", header = False, index = False)
 
-	subset_150 = temp_bed_stripped[(temp_bed_stripped.iloc[:,3]>=150) & (temp_bed_stripped.iloc[:,3]<=800)]
-	subset_150.to_csv(size_selected_150[i], sep="\t", header = False, index = False)
+	subset_med = temp_bed_stripped[(temp_bed_stripped.iloc[:,3]>=150) & (temp_bed_stripped.iloc[:,3]<=300)]
+	subset_med.to_csv(size_selected_med[i], sep="\t", header = False, index = False)
+
+	subset_big = temp_bed_stripped[(temp_bed_stripped.iloc[:,3]>=301) & (temp_bed_stripped.iloc[:,3]<=700)]
+	subset_big.to_csv(size_selected_big[i], sep="\t", header = False, index = False)
+
 
 
 print 'Finished generating bed files:'
 print '\n'
 print 'whole insert bed files:' + '\n' + '\n'.join(bed_names)
 print '\n'
-print 'bed files for inserts < 120 bp:' + '\n' + '\n'.join(size_selected_120)
+print 'bed files for inserts < 140 bp:' + '\n' + '\n'.join(size_selected_small)
 print '\n'
-print 'bed files for inserts > 150 bp:' + '\n' + '\n'.join(size_selected_150)
+print 'bed files for inserts 150 bp - 300 bp:' + '\n' + '\n'.join(size_selected_med)
+print '\n'
+print 'bed files for inserts > 300 bp:' + '\n' + '\n'.join(size_selected_big)
 
 
 #generate normalized bedgraphs
@@ -131,8 +140,9 @@ print '\n'
 
 #generate bedgraph names
 bg_names = [f.replace('bed', 'bg') for f in bed_names]
-size_selected_120_bg = [f.replace('bed', 'bg') for f in size_selected_120]
-size_selected_150_bg = [f.replace('bed', 'bg') for f in size_selected_150]
+size_selected_small_bg = [f.replace('bed', 'bg') for f in size_selected_small]
+size_selected_med_bg = [f.replace('bed', 'bg') for f in size_selected_med]
+size_selected_big_bg = [f.replace('bed', 'bg') for f in size_selected_big]
 
 print 'Generating average normalized bedgraphs for all the bed files'
 print '\n'
@@ -166,19 +176,24 @@ for i in range(len(bed_names)):
 for i in range(len(bg_names)):
 	BedTool(bed_names[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(bg_names[i])
 
-for i in range(len(size_selected_120_bg)):
-	BedTool(size_selected_120[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(size_selected_120_bg[i])
+for i in range(len(size_selected_small_bg)):
+	BedTool(size_selected_small[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(size_selected_small_bg[i])
 
-for i in range(len(size_selected_150_bg)):
-	BedTool(size_selected_150[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(size_selected_150_bg[i])
+for i in range(len(size_selected_med_bg)):
+	BedTool(size_selected_med[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(size_selected_med_bg[i])
+
+for i in range(len(size_selected_big_bg)):
+	BedTool(size_selected_big[i]).genome_coverage(bg = True, genome = 'hg19', scale = scaling_factor[i]).moveto(size_selected_big_bg[i])
 
 print 'Finished generating bedgraph files:'
 print '\n'
 print 'whole insert bedgraph files:' + '\n' + '\n'.join(bg_names)
 print '\n'
-print 'bedgraph files for inserts < 120 bp:' + '\n' + '\n'.join(size_selected_120_bg)
+print 'bedgraph files for inserts < 140 bp:' + '\n' + '\n'.join(size_selected_small_bg)
 print '\n'
-print 'bedgraph files for inserts > 150 bp:' + '\n' + '\n'.join(size_selected_150_bg)
+print 'bedgraph files for inserts 150 bp - 300 bp:' + '\n' + '\n'.join(size_selected_med_bg)
+print '\n'
+print 'bedgraph files for inserts > 300 bp:' + '\n' + '\n'.join(size_selected_big_bg)
 
 ##make bigwig files
 print 'Current working directory is:' +  os.getcwd()
@@ -189,72 +204,90 @@ print '\n'
 
 #generate bigwig names
 bw_names = [f.replace('bg', 'bw') for f in bg_names]
-size_selected_120_bw = [f.replace('bg', 'bw') for f in size_selected_120_bg]
-size_selected_150_bw = [f.replace('bg', 'bw') for f in size_selected_150_bg]
+size_selected_small_bw = [f.replace('bg', 'bw') for f in size_selected_small_bg]
+size_selected_med_bw = [f.replace('bg', 'bw') for f in size_selected_med_bg]
+size_selected_big_bw = [f.replace('bg', 'bw') for f in size_selected_big_bg]
 
 #run bedgraph_to_bigwig tool
 for i in range(len(bg_names)):
 	bedgraph_to_bigwig(BedTool(bg_names[i]), 'hg19', bw_names[i])
-for i in range(len(size_selected_120_bg)):
-	bedgraph_to_bigwig(BedTool(size_selected_120_bg[i]), 'hg19', size_selected_120_bw[i])
-for i in range(len(size_selected_150_bg)):
-	bedgraph_to_bigwig(BedTool(size_selected_150_bg[i]), 'hg19', size_selected_150_bw[i])
+for i in range(len(size_selected_small_bg)):
+	bedgraph_to_bigwig(BedTool(size_selected_small_bg[i]), 'hg19', size_selected_small_bw[i])
+for i in range(len(size_selected_med_bg)):
+	bedgraph_to_bigwig(BedTool(size_selected_med_bg[i]), 'hg19', size_selected_med_bw[i])
+for i in range(len(size_selected_big_bg)):
+	bedgraph_to_bigwig(BedTool(size_selected_big_bg[i]), 'hg19', size_selected_big_bw[i])
+
 
 print 'Finished generating bigwig files:'
 print '\n'
 print 'whole insert bigwig files:' + '\n' + '\n'.join(bw_names)
 print '\n'
-print 'bigwig files for inserts < 120 bp:' + '\n' + '\n'.join(size_selected_120_bw)
+print 'bigwig files for inserts < 140 bp:' + '\n' + '\n'.join(size_selected_small_bw)
 print '\n'
-print 'bigwig files for inserts > 150 bp:' + '\n' + '\n'.join(size_selected_150_bw)
+print 'bigwig files for inserts 150 bp - 300 bp:' + '\n' + '\n'.join(size_selected_med_bw)
+print '\n'
+print 'bigwig files for inserts > 300 bp:' + '\n' + '\n'.join(size_selected_big_bw)
 
 os.mkdir('/data/beds')
-os.mkdir('/data/beds/size_selected_under120')
-os.mkdir('/data/beds/size_selected_over150')
+os.mkdir('/data/beds/size_selected_small')
+os.mkdir('/data/beds/size_selected_med')
+os.mkdir('/data/beds/size_selected_big')
 os.mkdir('/data/beds/lengths')
 os.mkdir('/data/bedgraphs')
-os.mkdir('/data/bedgraphs/size_selected_under120')
-os.mkdir('/data/bedgraphs/size_selected_over150')
+os.mkdir('/data/bedgraphs/size_selected_small')
+os.mkdir('/data/bedgraphs/size_selected_med')
+os.mkdir('/data/bedgraphs/size_selected_big')
 os.mkdir('/data/bigwigs')
-os.mkdir('/data/bigwigs/size_selected_under120')
-os.mkdir('/data/bigwigs/size_selected_over150')
+os.mkdir('/data/bigwigs/size_selected_small')
+os.mkdir('/data/bigwigs/size_selected_med')
+os.mkdir('/data/bigwigs/size_selected_big')
 
 output_dir0 = '/data/beds'
 output_dir1 = '/data/beds/lengths'
-output_dir2 = '/data/beds/size_selected_under120'
-output_dir3 = '/data/beds/size_selected_over150'
+output_dir2 = '/data/beds/size_selected_small'
+output_dir3 = '/data/beds/size_selected_med'
+output_dir4 = '/data/beds/size_selected_big'
 for i in range(len(bed_names)):
 	shutil.move(bed_names[i], output_dir0)
 for i in range(len(lengths_names)):
 	shutil.move(lengths_names[i], output_dir1)
-for i in range(len(size_selected_120)):		
-	shutil.move(size_selected_120[i], output_dir2)
-for i in range(len(size_selected_150)):	
-	shutil.move(size_selected_150[i], output_dir3)
+for i in range(len(size_selected_small)):		
+	shutil.move(size_selected_small[i], output_dir2)
+for i in range(len(size_selected_med)):	
+	shutil.move(size_selected_med[i], output_dir3)
+for i in range(len(size_selected_big)):	
+	shutil.move(size_selected_big[i], output_dir4)
 
 print 'Moving bedgraphs to output folder'
 print '\n'
-output_dir4 = '/data/bedgraphs'
-output_dir5 = '/data/bedgraphs/size_selected_under120'
-output_dir6 = '/data/bedgraphs/size_selected_over150'
+output_dir5 = '/data/bedgraphs'
+output_dir6 = '/data/bedgraphs/size_selected_small'
+output_dir7 = '/data/bedgraphs/size_selected_med'
+output_dir8 = '/data/bedgraphs/size_selected_big'
 for i in range(len(bg_names)):
-	shutil.move(bg_names[i], output_dir4)
-for i in range(len(size_selected_120_bg)):		
-	shutil.move(size_selected_120_bg[i], output_dir5)
-for i in range(len(size_selected_150_bg)):	
-	shutil.move(size_selected_150_bg[i], output_dir6)
+	shutil.move(bg_names[i], output_dir5)
+for i in range(len(size_selected_small_bg)):		
+	shutil.move(size_selected_small_bg[i], output_dir6)
+for i in range(len(size_selected_med_bg)):	
+	shutil.move(size_selected_med_bg[i], output_dir7)
+for i in range(len(size_selected_big_bg)):	
+	shutil.move(size_selected_big_bg[i], output_dir8)
 
 print 'Moving bigwigs to output folder'
 print '\n'
-output_dir7 = '/data/bigwigs'
-output_dir8 = '/data/bigwigs/size_selected_under120'
-output_dir9 = '/data/bigwigs/size_selected_over150'
+output_dir9 = '/data/bigwigs'
+output_dir10 = '/data/bigwigs/size_selected_small'
+output_dir11 = '/data/bigwigs/size_selected_med'
+output_dir12 = '/data/bigwigs/size_selected_big'
 for i in range(len(bw_names)):
-	shutil.move(bw_names[i], output_dir7)
-for i in range(len(size_selected_120_bw)):		
-	shutil.move(size_selected_120_bw[i], output_dir8)
-for i in range(len(size_selected_150_bw)):	
-	shutil.move(size_selected_150_bw[i], output_dir9)
+	shutil.move(bw_names[i], output_dir9)
+for i in range(len(size_selected_small_bw)):		
+	shutil.move(size_selected_small_bw[i], output_dir10)
+for i in range(len(size_selected_med_bw)):	
+	shutil.move(size_selected_med_bw[i], output_dir11)
+for i in range(len(size_selected_big_bw)):	
+	shutil.move(size_selected_big_bw[i], output_dir12)
 
 
 print 'Finished'
