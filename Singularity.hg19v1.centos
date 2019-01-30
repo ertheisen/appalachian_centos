@@ -220,6 +220,7 @@ Singularity container containing following apps for ChIP-seq and CUT&RUN process
 	mv /chipseq.py /appscripts/
 	mv /chipseq_1k.py /appscripts/
 
+
 %apprun fastqc_pre
 	python /appscripts/fastqc_pre.py
 
